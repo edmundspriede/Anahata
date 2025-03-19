@@ -31,8 +31,11 @@ class Ajax_Response extends Response_It {
 
 		$query_args['message'] = $messages->get_rendered_messages();
 
-    
-		wp_send_json( $query_args );
+        $statusCode = 200;
+        if ( $query_args['status'] == 'error' ) {
+            $statusCode = 400;
+        }
+		wp_send_json( $query_args, $statusCode );
 	}
 
 	public function additional_fields() {
