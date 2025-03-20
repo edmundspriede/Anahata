@@ -5,7 +5,18 @@
 function enqueue_jetpopup_notification_script() {
     ?>
     <style>
-        /* Global Message Container */
+        /* Hide all default messages */
+        .jet-form-builder-message--success,
+        .jet-form-builder-message--error,
+        #login_error,
+        .message,
+        .jet-engine-message,
+        .jet-form-messages-wrap,
+        .jet-form-builder-messages-wrap {
+            display: none !important;
+        }
+
+        /* Message Container */
         #jet-popup-message {
             position: fixed;
             top: 0;
@@ -16,24 +27,23 @@ function enqueue_jetpopup_notification_script() {
             display: none;
         }
 
-        /* Overlay Styling */
+        /* Overlay */
         #jet-popup-message-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(255, 255, 255, 0.4);
+            background-color: rgba(255, 255, 255, 0.1);
             z-index: 100;
             backdrop-filter: blur(5px) brightness(40%);
         }
 
-        /* Message Box Styling */
+        /* Message Box */
         #jet-popup-message-box {
             position: fixed;
             right: 20px;
             bottom: 20px;
-            background-color: #d2e3d8;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
@@ -44,7 +54,7 @@ function enqueue_jetpopup_notification_script() {
             max-width: 400px;
             opacity: 0;
             transform: translateY(20px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         #jet-popup-message-box.visible {
@@ -52,21 +62,25 @@ function enqueue_jetpopup_notification_script() {
             transform: translateY(0);
         }
 
-        #jet-popup-message-box.error {
-            background: #fff2f2;
-            border-left: 4px solid #dc3545;
+        /* Success State */
+        #jet-popup-message-box.success {
+            background: #28a745;
+            border-left: 4px solid #1e7e34;
+            color: white;
         }
 
-        #jet-popup-message-box.success {
-            background: #f0fff4;
-            border-left: 4px solid #28a745;
+        /* Error State */
+        #jet-popup-message-box.error {
+            background: #dc3545;
+            border-left: 4px solid #bd2130;
+            color: white;
         }
 
         #jet-popup-message-content {
             margin-bottom: 20px;
             font-size: 14px;
             line-height: 1.6;
-            color: #333;
+            color: inherit;
         }
 
         .success #jet-popup-message-content {
@@ -75,33 +89,25 @@ function enqueue_jetpopup_notification_script() {
 
         #jet-popup-message-close {
             padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
+            border: 2px solid white;
             border-radius: 5px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
             transition: all 0.2s ease;
-        }
-
-        #jet-popup-message-close:hover {
-            background-color: #0056b3;
-        }
-
-        .error #jet-popup-message-close {
-            background: #dc3545;
+            background: transparent;
+            color: white;
         }
 
         .error #jet-popup-message-close:hover {
-            background: #bd2130;
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .success #jet-popup-message-close {
             display: none !important;
         }
 
-        /* Responsive Styles */
+        /* Responsive */
         @media (max-width: 1024px) {
             #jet-popup-message-box {
                 width: 80%;
@@ -118,7 +124,7 @@ function enqueue_jetpopup_notification_script() {
     </style>
 
     <div id="jet-popup-message">
-        <div id="jet-popup-message-overlay"></div>
+        <!-- <div id="jet-popup-message-overlay"></div> -->
         <div id="jet-popup-message-box">
             <div id="jet-popup-message-content"></div>
             <button type="button" id="jet-popup-message-close">Aizvērt</button>
@@ -130,6 +136,15 @@ function enqueue_jetpopup_notification_script() {
         // Move message container to body
         $('#jet-popup-message').appendTo('body');
 
+        // Clean HTML tags from message
+        function cleanMessage(message) {
+            // Create a temporary div to handle HTML content
+            let temp = document.createElement('div');
+            temp.innerHTML = message;
+            // Get text content only
+            return temp.textContent || temp.innerText || '';
+        }
+
         // Close message function
         function closeMessage() {
             $('#jet-popup-message').hide();
@@ -137,27 +152,30 @@ function enqueue_jetpopup_notification_script() {
             $('#jet-popup-message-content').empty();
         }
 
-        // Show message function
+        // Enhanced showMessage function
         function showMessage(message, type) {
-            var defaultSuccessMessage = 'Action completed successfully';
-            var finalMessage = type === 'success' ? (message || defaultSuccessMessage) : message;
+            // Clean the message from HTML tags
+            let cleanedMessage = cleanMessage(message);
             
-            $('#jet-popup-message-content').text(finalMessage);
+            // Set default messages
+            if (type === 'success' && !cleanedMessage) {
+                cleanedMessage = 'Action completed successfully';
+            }
+            
+            // Hide all possible message containers
+            $('.jet-form-builder-message--success, .jet-form-builder-message--error, #login_error, .message, .jet-engine-message, .jet-form-messages-wrap, .jet-form-builder-messages-wrap').hide();
+            
+            $('#jet-popup-message-content').text(cleanedMessage);
             $('#jet-popup-message-box').removeClass('error success').addClass(type);
             $('#jet-popup-message').show();
             
-            // Add visible class after a small delay for animation
             setTimeout(function() {
                 $('#jet-popup-message-box').addClass('visible');
             }, 10);
 
-            // For success messages, auto-hide after 2 seconds
             if (type === 'success') {
                 setTimeout(closeMessage, 2000);
             }
-
-            // Hide original messages
-            $('.jet-form-builder-message--success, .jet-form-builder-message--error, #login_error, .message').hide();
         }
 
         // Close button click
@@ -186,9 +204,8 @@ function enqueue_jetpopup_notification_script() {
             var message = '';
             var type = 'error';
             
-            var $error = $('.jet-form-builder-message--error:visible');
+            var $error = $('.jet-form-builder-message--error:visible, #login_error:visible');
             var $success = $('.jet-form-builder-message--success:visible');
-            var $loginError = $('#login_error:visible');
             var $message = $('.message:visible');
 
             if ($error.length) {
@@ -197,37 +214,47 @@ function enqueue_jetpopup_notification_script() {
             } else if ($success.length) {
                 message = $success.text();
                 type = 'success';
-            } else if ($loginError.length) {
-                message = $loginError.text();
-                type = 'error';
             } else if ($message.length && !$message.hasClass('jet-form-builder-message')) {
                 message = $message.text();
                 type = $message.hasClass('updated') ? 'success' : 'error';
             }
 
-            if (message || type === 'success') {
+            if (message) {
                 showMessage(message, type);
             }
         }
 
-        // Handle JetForm Builder success events
+        // Enhanced event handlers
+        $(document).on('jet-form-builder/ajax/on-fail', function(event, response, $form, data) {
+            let message = response.message || 'Form submit failed';
+            showMessage(message, 'error');
+            
+        });    
+        
         $(document).on('jet-form-builder/ajax/on-success', function(event, response, $form, data) {
-            showMessage(response.message || 'Form submitted successfully', 'success');
+            let message = response.message || 'Form submitted successfully';
+            showMessage(message, 'success');
             
             if (window.JetEngine) {
                 let formId = $form.data('form-id');
                 
-                // Update listings marked for this specific form
-                $('.update-on-form-' + formId).each(function() {
-                    refreshListing($(this));
-                });
-                
-                // Refresh all listings with check-ins counters
-                refreshAllCheckinsCounters();
-                
-                // Add a small delay and refresh again
-                setTimeout(refreshAllCheckinsCounters, 500);
+                // Delay the grid refresh slightly to ensure proper rendering
+                setTimeout(function() {
+                    // Update listings marked for this specific form
+                    $('.update-on-form-' + formId).each(function() {
+                        refreshListing($(this));
+                    });
+                    
+                    // Refresh all listings with check-ins counters
+                    refreshAllCheckinsCounters();
+                }, 100);
             }
+        });
+
+        // Add instant check-in specific handler
+        $(document).on('click', '[data-action="checkin"]', function() {
+            // Hide any existing messages immediately
+            $('.jet-form-builder-message--success, .jet-form-builder-message--error, #login_error, .message, .jet-engine-message, .jet-form-messages-wrap, .jet-form-builder-messages-wrap').hide();
         });
 
         // Function to refresh all listings that might contain check-ins counters
@@ -259,29 +286,51 @@ function enqueue_jetpopup_notification_script() {
             };
             
             window.JetEngine.ajaxGetListing(args, function(response) {
-                let $container = $listing.children('.elementor-widget-container');
-                $container.html($(response.data.html));
-                window.JetEngine.widgetListingGrid($listing);
-                window.JetEngine.initElementsHandlers($container);
+                if (response.success && response.data.html) {
+                    let $container = $listing.children('.elementor-widget-container');
+                    $container.html($(response.data.html));
+                    
+                    // Ensure proper initialization
+                    if (window.JetEngine.widgetListingGrid) {
+                        window.JetEngine.widgetListingGrid($listing);
+                    }
+                    if (window.JetEngine.initElementsHandlers) {
+                        window.JetEngine.initElementsHandlers($container);
+                    }
+                }
             });
         }
 
-        // Form submission
-        $(document).on('submit', 'form', function(event) {
-            $(document).on('ajaxComplete', function(event, xhr, settings) {
-                setTimeout(checkMessages, 100);
+        // Enhanced MutationObserver
+        var observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.classList && 
+                            (node.classList.contains('jet-form-builder-message--success') ||
+                             node.classList.contains('jet-form-builder-message--error') ||
+                             node.classList.contains('jet-engine-message') ||
+                             node.classList.contains('jet-form-messages-wrap') ||
+                             node.classList.contains('jet-form-builder-messages-wrap'))) {
+                            $(node).hide();
+                            let message = $(node).text();
+                            if (message) {
+                                // Determine if it's an error message
+                                let type = node.classList.contains('jet-form-builder-message--error') ? 'error' : 'success';
+                                showMessage(message, type);
+                            }
+                        }
+                    });
+                }
             });
-        });
-
-        // Content changes
-        var observer = new MutationObserver(function() {
-            setTimeout(checkMessages, 100);
         });
 
         observer.observe(document.body, {
             childList: true,
             subtree: true
         });
+
+      
     });
     </script>
     <?php
