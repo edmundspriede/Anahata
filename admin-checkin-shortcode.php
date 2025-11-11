@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Shortcode: [user_checkin_form]
  * Display a user search and check-in form for events
@@ -76,6 +77,7 @@ function user_checkin_form_shortcode() {
             }
             .modal-header h3 { margin: 0; }
             .modal-close {
+                display: none;
                 background: none;
                 border: none;
                 font-size: 24px;
@@ -153,7 +155,8 @@ function user_checkin_form_shortcode() {
                 padding: 15px 20px;
                 border-top: 1px solid #ddd;
                 display: flex !important;
-                justify-content: flex-end;
+                flex-direction: row;
+                justify-content: center;
                 align-items: center;
                 gap: 10px;
                 background: white;
@@ -463,7 +466,7 @@ function user_checkin_form_shortcode() {
         </style>
 
         <div>
-            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Select User:</label>
+           
             <button type="button" class="user-select-btn" id="open-user-modal-<?php echo $unique_id; ?>">
                 <span class="placeholder-text" id="selected-user-display-<?php echo $unique_id; ?>">-- Select a user --</span>
                 <span class="arrow">▼</span>
@@ -595,10 +598,7 @@ function user_checkin_form_shortcode() {
                 </div>
                 
                 <div class="modal-footer">
-                    <div class="modal-message">
-                        <div id="modal-error-<?php echo $unique_id; ?>" class="modal-error"></div>
-                        <div id="modal-success-<?php echo $unique_id; ?>" class="modal-success"></div>
-                    </div>
+                   
                     <button type="button" class="btn btn-cancel" id="modal-cancel-<?php echo $unique_id; ?>">Cancel</button>
                     <button type="button" class="btn btn-primary" id="modal-checkin-<?php echo $unique_id; ?>" disabled>Check In User</button>
                 </div>
